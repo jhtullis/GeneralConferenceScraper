@@ -9,6 +9,30 @@ A comprehensive toolkit for scraping, analyzing, and exploring LDS General Confe
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+## 🔧 About this fork
+
+This is a fork of [lukejoneslj/GeneralConferenceScraper](https://github.com/lukejoneslj/GeneralConferenceScraper),
+patched so the scraper runs as a plain local script instead of inside a
+Google Colab notebook. Changes from upstream:
+
+- `scraper/conferencescraper.py` — removed the Colab-only `!pip install` line
+  and the trailing `google.colab.files.download()` call (both raise/crash
+  outside a notebook), added an `if __name__ == "__main__":` guard, and
+  pointed CSV/JSON output at a `data/` folder resolved relative to the
+  script itself rather than the current working directory. Also fixed a bug
+  in `clean_conference_data()` that unconditionally dropped a `"conference"`
+  column this scraper's schema never produces, which crashed the cleaning
+  step immediately after a successful scrape.
+- Added `pyproject.toml` and `__init__.py` files to `scraper/` and
+  `classification/` so the repo installs as an editable package
+  (`pip install -e .`) and can be imported (`import scraper.
+  conferencescraper`) from anywhere in the environment, rather than needing
+  to be run from inside its own directory.
+
+Everything else — scraper logic, topic/emotion classification, and the
+Next.js web app — is unmodified from upstream. Rest of this README is
+upstream's original documentation. Changes were made using Anthropic's Claude Code.
+
 ## 🎯 Overview
 
 This project provides three powerful components:

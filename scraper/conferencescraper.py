@@ -17,8 +17,6 @@ This cell installs the necessary Python libraries for web scraping, working with
 - `PyPDF2`: If you need to work with PDF files.
 """
 
-!pip install requests beautifulsoup4 PyPDF2
-
 """### Web Scraping Conference Talks
 
 This block contains helper functions for scraping LDS General Conference talks from the Church's website.
@@ -31,6 +29,7 @@ This block contains helper functions for scraping LDS General Conference talks f
 
 """
 
+import os
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -39,6 +38,9 @@ import unicodedata
 import time
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+os.makedirs(DATA_DIR, exist_ok=True)
 
 def get_soup(url):
     """Create a tree structure (BeautifulSoup) out of a GET request's HTML."""
@@ -186,20 +188,13 @@ def main_scrape_process():
         conference_df[col] = conference_df[col].apply(lambda x: x.replace("\t", "") if isinstance(x, str) else x)
 
     # Save to CSV and JSON
-    conference_df.to_csv("conference_talks.csv", index=False)
-    print("Scraping complete. Data saved to 'conference_talks.csv'.")
+    csv_path = os.path.join(DATA_DIR, "conference_talks.csv")
+    json_path = os.path.join(DATA_DIR, "conference_talks.json")
+    conference_df.to_csv(csv_path, index=False)
+    print(f"Scraping complete. Data saved to '{csv_path}'.")
 
-    conference_df.to_json("conference_talks.json", orient="records", indent=4)
-    print("Data also saved to 'conference_talks.json'.")
-
-# Run the scraper
-start = time.time()
-main_scrape_process()
-end = time.time()
-print(f"Total time taken: {end - start} seconds")
-
-from google.colab import files
-files.download('conference_talks.csv')
+    conference_df.to_json(json_path, orient="records", indent=4)
+    print(f"Data also saved to '{json_path}'.")
 
 """### Clean Conference Talks Data
 
@@ -224,8 +219,9 @@ def clean_conference_data(file_path):
     # Step 1: Remove rows with "Church Auditing Department" in the "calling" column
     df = df[~df['calling'].str.contains("Church Auditing Department", na=False)]
 
-    # Step 2: Remove the "conference" column
-    df = df.drop(columns=['conference'])
+    # Step 2: Remove the "conference" column, if present
+    if 'conference' in df.columns:
+        df = df.drop(columns=['conference'])
 
     # Step 3: Modify callings to standardize common names
     # Replace "Quorum of the Twelve Apostles", "twelve", or "12" with "Quorum of the 12"
@@ -254,8 +250,15 @@ def clean_conference_data(file_path):
         df = df.drop(columns=['footnotes'])
 
     # Save the cleaned data to CSV
-    df.to_csv("cleaned_conference_talks.csv", index=False)
-    print("Data cleaned and saved to 'cleaned_conference_talks.csv'.")
+    cleaned_path = os.path.join(DATA_DIR, "cleaned_conference_talks.csv")
+    df.to_csv(cleaned_path, index=False)
+    print(f"Data cleaned and saved to '{cleaned_path}'.")
 
-# Example usage
-clean_conference_data('conference_talks.csv')
+
+if __name__ == "__main__":
+    start = time.time()
+    main_scrape_process()
+    end = time.time()
+    print(f"Total time taken: {end - start} seconds")
+
+    clean_conference_data(os.path.join(DATA_DIR, "conference_talks.csv"))

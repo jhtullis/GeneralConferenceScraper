@@ -64,3 +64,6 @@ Thumbs.db
 .cache/
 transformers_cache/
 
+# Run logs
+scraper_run.log
+
